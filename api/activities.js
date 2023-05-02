@@ -5,21 +5,18 @@ const {
   getAllActivities,
   createActivity,
   updateActivity,
-  getPublicRoutinesByActivity
 } = require('../db/activities');
 
-// GET /api/activities/:activityId/routines
 router.get('/:activityId/routines', async (req, res, next) => {
   try {
     const { activityId } = req.params;
-    const routines = await getPublicRoutinesByActivity({ id: activityId });
+    const routines = await getActivityById({ id: activityId });
     res.send(routines);
   } catch (error) {
     next(error);
   }
 });
 
-// GET /api/activities
 router.get('/', async (req, res, next) => {
   try {
     const activities = await getAllActivities();
@@ -29,7 +26,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// POST /api/activities
 router.post('/', async (req, res, next) => {
   try {
     const { name, description } = req.body;
@@ -40,7 +36,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// PATCH /api/activities/:activityId
+
 router.patch('/:activityId', async (req, res, next) => {
   try {
     const { activityId } = req.params;
