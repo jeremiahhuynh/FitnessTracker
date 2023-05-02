@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const {
   updateRoutineActivity,
-  deleteRoutineActivity
+  destroyRoutineActivity
 } = require('../db/routine_activities');
-const { requireMatchingUser } = require('./utils');
+const { requireMatchingUser } = require('../db/utils');
 
 router.patch('/:routineActivityId', requireMatchingUser, async (req, res, next) => {
   try {
@@ -23,7 +23,7 @@ router.patch('/:routineActivityId', requireMatchingUser, async (req, res, next) 
 router.delete('/:routineActivityId', requireMatchingUser, async (req, res, next) => {
   try {
     const { routineActivityId } = req.params;
-    await deleteRoutineActivity(routineActivityId);
+    await destroyRoutineActivity(routineActivityId);
     res.send({ message: 'Routine activity deleted successfully.' });
   } catch (error) {
     next(error);
