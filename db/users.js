@@ -8,7 +8,7 @@ async function createUser({ username, password }) {
     const { rows: [user] } = await client.query(`
       INSERT INTO users (username, password)
       VALUES ($1, $2)
-      RETURNING *;
+      RETURNING id, username;
     `, [username, hashedPassword]);
     return user;
   } catch (error) {
@@ -19,13 +19,14 @@ async function createUser({ username, password }) {
 
 async function getUser({ username, password }) {
   try {
-    const user = await getUserByUserName(username);
+    const user = await getUserByUsername(username);
     if (!user) {
       return null;
     }
     const hashedPassword = user.password;
     const isValid = await bcrypt.compare(password, hashedPassword);
     if (isValid) {
+      delete user.password;
       return user;
     } else {
       return null;
@@ -39,7 +40,7 @@ async function getUser({ username, password }) {
 async function getUserById(userId) {
   try {
     const { rows: [user] } = await client.query(`
-      SELECT * FROM users
+      SELECT id, username FROM users
       WHERE id = $1;
     `, [userId]);
     return user;
@@ -49,10 +50,10 @@ async function getUserById(userId) {
   }
 }
 
-async function getUserByUserName(username) {
+async function getUserByUsername(username) {
   try {
     const { rows: [user] } = await client.query(`
-      SELECT * FROM users
+      SELECT id, username, password FROM users
       WHERE username = $1;
     `, [username]);
     return user;
@@ -66,5 +67,5 @@ module.exports = {
   createUser,
   getUser,
   getUserById,
-  getUserByUserName
+  getUserByUsername
 }
