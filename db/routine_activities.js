@@ -2,7 +2,7 @@ const client = require("./client");
 
 async function addActivityToRoutine({ routineId, activityId, count, duration }) {
   try {
-    const { rows } = await client.query(
+    const { rows: [routine_activity] } = await client.query(
       `
       INSERT INTO routine_activities ("routineId", "activityId", count, duration)
       VALUES ($1, $2, $3, $4)
@@ -10,7 +10,7 @@ async function addActivityToRoutine({ routineId, activityId, count, duration }) 
     `,
       [routineId, activityId, count, duration]
     );
-    return rows[0];
+    return routine_activity;
   } catch (error) {
     console.error("Error adding activity to routine:", error);
     throw error;
@@ -74,7 +74,7 @@ async function destroyRoutineActivity(id) {
   try {
     const { rows } = await client.query(`
       DELETE FROM routine_activities
-      WHERE id=$1
+      WHERE id = $1
       RETURNING *;
     `, [id]);
 

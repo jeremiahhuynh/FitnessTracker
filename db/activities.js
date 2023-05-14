@@ -2,7 +2,7 @@ const client = require('./client');
 
 async function createActivity({ name, description }) {
   try {
-    const { rows } = await client.query(
+    const { rows: [activities], } = await client.query(
       `
       INSERT INTO activities(name, description)
       VALUES($1, $2)
@@ -11,7 +11,7 @@ async function createActivity({ name, description }) {
       [name.toLowerCase(), description]
     );
 
-    return rows[0];
+    return activities;
   } catch (error) {
     console.error("Error creating activity:", error);
     throw error;
@@ -20,11 +20,12 @@ async function createActivity({ name, description }) {
 
 async function getAllActivities() {
   try {
-    const { rows } = await client.query(`
-      SELECT * FROM activities;
+    const { rows: [activities], } = await client.query(`
+      SELECT *
+      FROM activities;
     `);
 
-    return rows;
+    return activities;
   } catch (error) {
     console.error("Error getting all activities:", error);
     throw error;
@@ -33,11 +34,14 @@ async function getAllActivities() {
 
 async function getActivityById(id) {
   try {
-    const { rows } = await client.query(`
-      SELECT * FROM activities WHERE id = $1;
-    `, [id]);
+    const { rows: [activities], } = await client.query(`
+      SELECT *
+      FROM activities
+      WHERE id = $1;
+    `,
+  [id]);
 
-    return rows[0];
+    return activities;
   } catch (error) {
     console.error("Error getting activity by id:", error);
     throw error;
@@ -46,31 +50,40 @@ async function getActivityById(id) {
 
 async function getActivityByName(name) {
   try {
-    const { rows } = await client.query(`
-      SELECT * FROM activities WHERE name = $1;
+    const { rows: [activities], } = await client.query(`
+      SELECT *
+      FROM activities
+      WHERE name = $1;
     `, [name.toLowerCase()]);
 
-    return rows[0];
+    return activities;
   } catch (error) {
     console.error("Error getting activity by name:", error);
     throw error;
   }
 }
 
-// used as a helper inside db/routines.js
 async function attachActivitiesToRoutines(routines) {
+  const routinesToReturn = [...routines];
+  const binds = routines.map((_, index) => `$${index + 1}`).join(', ');
+  const routineIds = routines.map(routine => routine.id);
+  if (!routineIds?.length) return [];
+  
   try {
-    const activities = await getAllActivities();
-    
-    for (let routine of routines) {
-      const routineActivities = activities.filter(activity => activity.routineId === routine.id);
-      routine.activities = routineActivities;
-    }
+    const { rows: activities } = await client.query(`
+      SELECT activities.*, routine_activities.duration, routine_activities.count, routine_activities.id AS "routineActivityId", routine_activities."routineId"
+      FROM activities 
+      JOIN routine_activities ON routine_activities."activityId" = activities.id
+      WHERE routine_activities."routineId" IN (${ binds });
+    `, routineIds);
 
-    return routines;
+    for(const routine of routinesToReturn) {
+      const activitiesToAdd = activities.filter(activity => activity.routineId === routine.id);
+      routine.activities = activitiesToAdd;
+    }
+    return routinesToReturn;
   } catch (error) {
-    console.error("Error attaching activities to routines:", error);
-    throw error;
+    console.log(error);
   }
 }
 

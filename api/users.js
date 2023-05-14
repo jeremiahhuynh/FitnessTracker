@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = process.env;
 const { createUser, getUser, getUserByUserName } = require("../db/users");
 const { getPublicRoutinesByUser } = require("../db/routines");
-const { JWT_SECRET } = process.env;
 const { requireUser } = require('../db/utils');
 
 // POST /api/users/register
