@@ -7,6 +7,7 @@ const {
   updateActivity,
   getActivityByName,
 } = require('../db/activities');
+const { getPublicRoutinesByActivity } = require('../db/routines');
 
 router.get('/:activityId/routines', async (req, res, next) => {
   try {
